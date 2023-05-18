@@ -8,7 +8,7 @@ const ExpenseFilter = ({ onSelectCategory }: ExpenseFilterProps) => {
             className="form-select"
             onChange={(event) => onSelectCategory(event.target.value)}
         >
-            <option value="">All categories</option>
+            <option value="">All categorie</option>
             <option value="Groceries">Groceries</option>
             <option value="Utilities">Utilities</option>
             <option value="Entretainment">Entretainment</option>
