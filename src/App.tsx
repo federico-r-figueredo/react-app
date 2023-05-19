@@ -1,12 +1,8 @@
 import "bootstrap/dist/css/bootstrap.css";
 import Container from "./components/Container/Container";
 import { useEffect, useState } from "react";
-import apiClient, { CanceledError } from "./services/api-client";
-
-interface User {
-    id: number;
-    name: string;
-}
+import { CanceledError } from "./services/apiClient";
+import userService, { User } from "./services/userService";
 
 function App() {
     const [users, setUsers] = useState<User[]>([]);
@@ -14,11 +10,9 @@ function App() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const controller = new AbortController();
-
         setIsLoading(true);
-        apiClient
-            .get("/users", { signal: controller.signal })
+        const { request, cancel } = userService.getAll<User[]>();
+        request
             .then((res) => {
                 setUsers(res.data);
                 setIsLoading(false);
@@ -29,7 +23,7 @@ function App() {
                 setIsLoading(false);
             });
 
-        return () => controller.abort();
+        return () => cancel();
     }, []);
 
     function addUser(): void {
@@ -37,11 +31,11 @@ function App() {
         const newUser = { id: 0, name: "fedex" };
         setUsers([newUser, ...users]);
 
-        apiClient
-            .post("/users", newUser)
+        userService
+            .create<User>(newUser)
             .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
-            .catch(({ message }) => {
-                setError(message);
+            .catch((err) => {
+                setError(err.message);
                 setUsers(originalUsers);
             });
     }
@@ -51,19 +45,17 @@ function App() {
         const updatedUser = { ...user, name: user.name + "!" };
         setUsers(users.map((x) => (x.id === user.id ? updatedUser : x)));
 
-        apiClient
-            .patch("/users/" + user.id, updatedUser)
-            .catch(({ message }) => {
-                setError(message);
-                setUsers(originalUsers);
-            });
+        userService.update<User>(updatedUser).catch((err) => {
+            setError(err.message);
+            setUsers(originalUsers);
+        });
     }
 
     function deleteUser(user: User): void {
         const originalUsers = [...users];
         setUsers(users.filter((x) => x.id !== user.id));
 
-        apiClient.delete("/users/" + user.id).catch((err) => {
+        userService.delete(user.id).catch((err) => {
             setError(err.message);
             setUsers(originalUsers);
         });
