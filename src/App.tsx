@@ -1,30 +1,10 @@
 import "bootstrap/dist/css/bootstrap.css";
 import Container from "./components/Container/Container";
-import { useEffect, useState } from "react";
-import { CanceledError } from "./services/apiClient";
 import userService, { User } from "./services/userService";
+import useUsers from "./hooks/useUsers";
 
 function App() {
-    const [users, setUsers] = useState<User[]>([]);
-    const [error, setError] = useState("");
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        setIsLoading(true);
-        const { request, cancel } = userService.getAll<User[]>();
-        request
-            .then((res) => {
-                setUsers(res.data);
-                setIsLoading(false);
-            })
-            .catch((err) => {
-                if (err instanceof CanceledError) return;
-                setError(err.message);
-                setIsLoading(false);
-            });
-
-        return () => cancel();
-    }, []);
+    const { users, error, isLoading, setUsers, setError } = useUsers();
 
     function addUser(): void {
         const originalUsers = [...users];
